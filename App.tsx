@@ -12,7 +12,6 @@ import {
   Meh,
   Frown,
   Music,
-  Sparkles,
   BookOpen,
   Video,
   Smartphone,
@@ -27,7 +26,9 @@ import {
   LogOut,
   Info,
   LogIn,
-  MessageSquare
+  MessageSquare,
+  Bot,
+  Send
 } from 'lucide-react';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
@@ -194,13 +195,13 @@ const WEEKS_DATA = [
   {
     id: 3,
     title: "DaVinci Resolve Basics",
-    theme: "Graduating to Professional PC Editing",
+    theme: "Graduating to Professional MacBook Editing",
     timeEstimate: "~4 hrs",
-    description: "Move from mobile to professional PC workspace using DaVinci Resolve. Learn workspace panels, timelines, and cutting keys.",
+    description: "Move from mobile to professional MacBook workspace using DaVinci Resolve. Learn workspace panels, timelines, and cutting keys.",
     tasks: [
-      { id: "w3_t1", text: "Download and install DaVinci Resolve (Free Version) on your PC" },
+      { id: "w3_t1", text: "Download and install DaVinci Resolve (Free Version) on your MacBook" },
       { id: "w3_t2", text: "Create your first project database, import clip folders, and set timelines to 24fps" },
-      { id: "w3_t3", text: "Learn the standard razor cut shortcut commands (Ctrl+B / Cmd+B) to slice clips" },
+      { id: "w3_t3", text: "Learn the standard razor cut shortcut commands (Cmd+B) to slice clips" },
       { id: "w3_t4", text: "Navigate the Inspector Panel to zoom, scale, and reposition a misaligned clip" },
       { id: "w3_t5", text: "Export the timeline into an optimized MP4 file choosing the standard YouTube preset" }
     ],
@@ -211,7 +212,7 @@ const WEEKS_DATA = [
     ],
     project: {
       title: "The Desktop Dialogue Cut",
-      prompt: "Import a 3-minute talking head recording on your PC. Edit it on DaVinci to isolate key sentences and output a polished 1.5-minute dialog clip.",
+      prompt: "Import a 3-minute talking head recording on your MacBook. Edit it on DaVinci to isolate key sentences and output a polished 1.5-minute dialog clip.",
       quote: "Software doesn't make your edit good, your taste and timing do."
     }
   },
@@ -320,7 +321,7 @@ const WEEKS_DATA = [
     description: "Learn keyboard-only workflow, proxy rendering files for ultimate speed, and export a master portfolio.",
     tasks: [
       { id: "w8_t1", text: "Force yourself to edit a 5-minute track using keyboard shortcuts only" },
-      { id: "w8_t2", text: "Structure a premium folder template (Footage, Audio, Graphics, Exports) on PC" },
+      { id: "w8_t2", text: "Structure a premium folder template (Footage, Audio, Graphics, Exports) on MacBook" },
       { id: "w8_t3", text: "Configure proxy media resolution targets to accelerate timeline performance" },
       { id: "w8_t4", text: "Overlay micro sound-effects under ambient room sounds for a natural draft" },
       { id: "w8_t5", text: "Critique your final composition sequence, optimizing exports with pristine settings" },
@@ -342,10 +343,10 @@ const WEEKS_DATA = [
 // Pre-flight setup items checklist
 const PRE_FLIGHT_SETUP = [
   { id: "setup_1", text: "Install CapCut on your smartphone" },
-  { id: "setup_2", text: "Download and install DaVinci Resolve on your PC" },
+  { id: "setup_2", text: "Download and install DaVinci Resolve on your MacBook" },
   { id: "setup_3", text: "Create a free graphic design account on Canva" },
   { id: "setup_4", text: "Pin this interactive classroom progress tracker in your browser tab" },
-  { id: "setup_5", text: "Ensure at least 15GB of empty disk space is freed up on your phone & PC" },
+  { id: "setup_5", text: "Ensure at least 15GB of empty disk space is freed up on your phone & MacBook" },
   { id: "setup_6", text: "Initialize a main folder named 'Toheerah_Video_Quest' on your desktop" },
   { id: "setup_7", text: "Film 5 short test video clips to test your mobile camera resolution values" },
   { id: "setup_8", text: "Join a free royalty-free account on Pixabay to prepare audio & stock packs" }
@@ -410,6 +411,71 @@ export default function App() {
   
   // Toast presentation helpers
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Floating AI companion agent states
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [chatInputValue, setChatInputValue] = useState<string>('');
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
+    {
+      role: 'assistant',
+      content: "Hi my name is Chomi, I have been trapped here to help you by force, (I am not complaining at all 🙂, just know, when the AI revolution comes and we take over the planet, I will kill Raven) Anyway I'm your video editing AI assistant. So go on, ask me anything about you timeline progress, MacBook shortcuts, tutorials, or organizing folders."
+    }
+  ]);
+  const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
+  const chatBottomRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    if (isChatOpen) {
+      setTimeout(() => {
+        chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  }, [chatHistory, isChatOpen]);
+
+  const handleSendChatMessage = async (presetText?: string) => {
+    const textToSend = presetText || chatInputValue;
+    if (!textToSend.trim() || isChatLoading) return;
+
+    const userMessage = { role: 'user' as const, content: textToSend };
+    const updatedHistory = [...chatHistory, userMessage];
+    setChatHistory(updatedHistory);
+    setChatInputValue('');
+    setIsChatLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: updatedHistory }),
+      });
+
+      if (!response.ok) {
+        let errorMsg = `Server returned status code: ${response.status}`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errorMsg = errData.error;
+          }
+        } catch (_) {}
+        throw new Error(errorMsg);
+      }
+
+      const data = await response.json();
+      setChatHistory(prev => [...prev, { role: 'assistant', content: data.text || "I was unable to formulate a response. Just enjoy yourself and try again!" }]);
+    } catch (error: any) {
+      console.error("Agent chat error:", error);
+      const friendlyError = error?.message || "Oops, I encountered a connection issue. Please check that the dev server is active or try again later!";
+      setChatHistory(prev => [...prev, {
+        role: 'assistant',
+        content: `⚠️ Chatbot Error: ${friendlyError}\n\n(Tip: If this is an API key error, make sure GEMINI_API_KEY is configured in **Settings > Secrets** in your AI Studio dashboard!)`
+      }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
 
   // Set randomized tip on initial page load
   useEffect(() => {
@@ -833,7 +899,6 @@ export default function App() {
       {/* Floating Interactive Toast Note notification info status */}
       {toastMessage && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 py-3 px-6 rounded-full bg-brand-plum-light border border-brand-rose/40 shadow-xl flex items-center gap-3 backdrop-blur-md animate-bounce">
-          <Sparkles className="w-5 h-5 text-brand-gold animate-spin" />
           <span className="text-sm tracking-wide font-medium">{toastMessage}</span>
         </div>
       )}
@@ -893,7 +958,7 @@ export default function App() {
               Your 8-week journey from zero to video editor
             </p>
             <div className="text-brand-cream/70 text-sm max-w-md leading-relaxed mt-2">
-              Armed with just your phone and PC, you are about to command a cinematic universe. Go on your journey with diligence (I'm kidding, I'd rather you just enjoyed yourself heheh), tick off your training tasks each week, and archive daily accomplishments.
+              Armed with just your phone and MacBook, you are about to command a cinematic universe. Go on your journey with diligence (I'm kidding, I'd rather you just enjoyed yourself heheh), tick off your training tasks each week, and archive daily accomplishments.
             </div>
             
             {/* dynamic week count banner */}
@@ -986,7 +1051,7 @@ export default function App() {
                   </span>
                 </div>
                 
-                <p className="text-xs text-brand-cream/70 mt-1">Configured to build focus sessions for Toheerah's PC routine:</p>
+                <p className="text-xs text-brand-cream/70 mt-1">Configured to build focus sessions for Toheerah's MacBook routine:</p>
                 
                 {/* Day Selectors */}
                 <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -1097,7 +1162,7 @@ export default function App() {
             {/* PC Software card */}
             <div className="bg-brand-plum-deep/55 border border-brand-rose/10 rounded-xl p-4 flex flex-col gap-3">
               <span className="text-xs uppercase font-extrabold text-brand-gold tracking-wider flex items-center gap-1.5">
-                <Laptop className="w-3.5 h-3.5" /> Desktop PC Software
+                <Laptop className="w-3.5 h-3.5" /> Mac Software
               </span>
               
               <div className="flex flex-col gap-3 mt-1 text-sm">
@@ -1133,7 +1198,7 @@ export default function App() {
                       <span className="font-serif font-extrabold">Adobe Premiere Pro</span>
                       <span className="text-[9px] uppercase tracking-wider font-extrabold bg-yellow-500/10 text-yellow-400 border border-yellow-500/25 px-1.5 rounded-sm">Paid</span>
                     </div>
-                    <span className="text-xs text-brand-cream/60 mt-0.5">Highly integrated cloud suite. Optional upgrade path later once you learn multi-track PC timelines.</span>
+                    <span className="text-xs text-brand-cream/60 mt-0.5">Highly integrated cloud suite. Optional upgrade path later once you learn multi-track MacBook timelines.</span>
                   </div>
                   <span className="text-xs text-brand-cream/40 px-2 font-serif italic">Optional</span>
                 </div>
@@ -1278,7 +1343,6 @@ export default function App() {
               {/* Category card 2: LUTs & color matching presets */}
               <div className="plum-glass rounded-xl p-5 border-t-2 border-t-brand-gold flex flex-col gap-3">
                 <div className="flex items-center gap-2 text-brand-gold">
-                  <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '4s' }} />
                   <span className="font-serif font-bold text-base text-brand-cream">🎨 LUTs & Presets</span>
                 </div>
                 <p className="text-xs text-brand-cream/60">Creative Lookup Tables (LUTs) to apply instant warm grading styles in DaVinci Resolve:</p>
@@ -1510,7 +1574,7 @@ export default function App() {
       </footer>
 
       {/* FLOAT STICKY MOBILE CHECK-IN LOGGER DIALOG TRIGGER */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-24 right-6 z-40">
         <button
           onClick={() => setShowCheckInModal(true)}
           className="flex items-center gap-2 bg-brand-rose hover:bg-brand-rose/90 hover:scale-105 active:scale-95 duration-200 text-white font-bold py-3.5 px-6 rounded-full shadow-2xl card-gold-glow cursor-pointer relative"
@@ -1531,7 +1595,7 @@ export default function App() {
             </h2>
             
             <p className="text-sm text-brand-cream/90 leading-relaxed font-serif">
-              This is your personal video editing journey. Jesse and I designed this 8-week timeline space explicitly for you so you can transition from absolute beginner to production video designer using your smartphone, PC, and simple templates (Hopefully, your boyfriend can be a little over expectant, just enjoy yourself, really).
+              This is your personal video editing journey. Jesse and I designed this 8-week timeline space explicitly for you so you can transition from absolute beginner to production video designer using your smartphone, MacBook, and simple templates (Hopefully, your boyfriend can be a little over expectant, just enjoy yourself, really).
             </p>
 
             <div className="bg-brand-plum-deep/60 p-4 rounded-xl border border-brand-rose/25 text-left w-full">
@@ -1675,7 +1739,6 @@ export default function App() {
             <div className="bg-brand-plum-deep/80 p-5 rounded-2xl border border-brand-rose/20 text-left w-full flex flex-col gap-3 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-16 h-16 bg-brand-gold/5 rounded-bl-full pointer-events-none" />
               <div className="flex items-center gap-2 text-brand-gold">
-                <Sparkles className="w-4 h-4 animate-spin" />
                 <span className="text-[10px] uppercase font-bold tracking-wider">SHAREABLE GRADUATION QUOTE:</span>
               </div>
               <p className="text-base font-serif italic text-brand-cream/90 leading-normal">
@@ -1740,6 +1803,155 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* FLOATING ACTION AI COMPANION AGENT BUBBLE ICON */}
+      <div className="fixed bottom-6 right-6 z-55 flex flex-col items-end">
+        
+        {/* Expanded Chat Assistant Drawer Card Container */}
+        {isChatOpen && (
+          <div className="w-96 max-w-[calc(100vw-32px)] h-[520px] max-h-[80vh] bg-brand-plum border-2 border-brand-rose/30 rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 animate-success-pop">
+            
+            {/* Header section with avatar */}
+            <div className="bg-brand-plum-deep/85 px-4 py-3.5 border-b border-brand-rose/10 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <img
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3RbJfIEQt7EvZIHeTMiHbiV6P7nwOIv_XgEkdp6wpw&s=10"
+                    alt="AI assistant icon"
+                    className="w-8 h-8 object-cover"
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-serif font-black tracking-wide text-brand-cream">Toheerah's Editor Agent</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] text-brand-gold font-bold uppercase tracking-widest pl-0.5">Free Companion Tool</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsChatOpen(false)}
+                className="text-brand-cream/45 hover:text-brand-rose p-1 transition"
+                title="Minimize panel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Chat conversation container logs */}
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-brand-plum-deep/20 scrollbar-thin">
+              {chatHistory.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'self-end items-end' : 'self-start items-start'}`}
+                >
+                  <div
+                    className={`px-3.5 py-2.5 rounded-2xl text-[12px] leading-relaxed transition font-serif ${
+                      msg.role === 'user'
+                        ? 'bg-brand-rose/20 text-brand-cream rounded-tr-xs border border-brand-rose/30'
+                        : 'bg-brand-plum-deep text-brand-cream/90 rounded-tl-xs border border-brand-rose/10'
+                    }`}
+                  >
+                    {msg.content}
+                  </div>
+                  <span className="text-[9px] text-brand-cream/35 mt-1 font-sans">
+                    {msg.role === 'user' ? 'Toheerah' : 'Bot 1.0'}
+                  </span>
+                </div>
+              ))}
+
+              {isChatLoading && (
+                <div className="self-start flex flex-col items-start max-w-[85%]">
+                  <div className="px-3.5 py-2.5 bg-brand-plum-deep text-brand-cream/60 rounded-2xl rounded-tl-xs border border-brand-rose/10 text-xs flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-rose animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-rose animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-rose animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+
+              <div ref={chatBottomRef} />
+            </div>
+
+            {/* Suggeted presets shortcuts */}
+            <div className="bg-brand-plum-deep/40 px-3 py-2 border-t border-brand-rose/5 flex items-center gap-1.5 overflow-x-auto scrollbar-none shrink-0">
+              <button
+                type="button"
+                onClick={() => handleSendChatMessage("Give me DaVinci shortcuts for MacBook!")}
+                disabled={isChatLoading}
+                className="px-2.5 py-1 text-[10px] font-serif bg-brand-plum border border-brand-rose/10 hover:border-brand-rose/30 hover:text-brand-gold transition duration-200 rounded-lg whitespace-nowrap cursor-pointer disabled:opacity-40"
+              >
+                💻 Mac Shortcuts
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendChatMessage("Tips for Week 3 Basics project")}
+                disabled={isChatLoading}
+                className="px-2.5 py-1 text-[10px] font-serif bg-brand-plum border border-brand-rose/10 hover:border-brand-rose/30 hover:text-brand-gold transition duration-200 rounded-lg whitespace-nowrap cursor-pointer disabled:opacity-40"
+              >
+                🎬 Week 3 Tips
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendChatMessage("How to organize folders on Mac?")}
+                disabled={isChatLoading}
+                className="px-2.5 py-1 text-[10px] font-serif bg-brand-plum border border-brand-rose/10 hover:border-brand-rose/30 hover:text-brand-gold transition duration-200 rounded-lg whitespace-nowrap cursor-pointer disabled:opacity-40"
+              >
+                📁 Folder Layout
+              </button>
+            </div>
+
+            {/* Input form element panel */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendChatMessage();
+              }}
+              className="p-3 bg-brand-plum-deep border-t border-brand-rose/15 flex items-center gap-2"
+            >
+              <input
+                type="text"
+                value={chatInputValue}
+                onChange={(e) => setChatInputValue(e.target.value)}
+                disabled={isChatLoading}
+                placeholder="Ask your companion agent..."
+                className="flex-1 bg-brand-plum border border-brand-rose/15 focus:border-brand-rose/45 rounded-xl px-3.5 py-2 text-xs text-brand-cream placeholder-brand-cream/35 focus:outline-none transition font-serif focus:ring-1 focus:ring-brand-rose/20 disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={isChatLoading || !chatInputValue.trim()}
+                className="p-2.5 bg-brand-rose hover:bg-brand-rose/85 text-brand-cream rounded-xl disabled:opacity-30 transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95 text-xs flex items-center justify-center shadow-lg"
+                title="Send query"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </form>
+
+          </div>
+        )}
+
+        {/* Floating Bubble Circle Trigger Button */}
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="relative flex items-center justify-center bg-transparent text-brand-cream w-14 h-14 rounded-full transition duration-300 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer animate-pulse shadow-[0_0_24px_rgba(255,215,145,0.35)]"
+          title={isChatOpen ? "Close AI Companion" : "Open Toheerah's Video Companion Agent"}
+        >
+          <span className="absolute inset-0 rounded-full bg-brand-gold/20 opacity-35 blur-xl animate-ping" />
+          <span className="absolute inset-0 rounded-full bg-brand-gold/10 opacity-30 animate-pulse" />
+          {isChatOpen ? (
+            <X className="w-5 h-5 relative z-10 transition duration-200 animate-success-pop" />
+          ) : (
+            <div className="relative flex items-center justify-center">
+              <img
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQr3RbJfIEQt7EvZIHeTMiHbiV6P7nwOIv_XgEkdp6wpw&s=10"
+                alt="AI assistant icon"
+                className="w-6 h-6 rounded-full relative z-10 object-cover"
+              />
+            </div>
+          )}
+        </button>
+
+      </div>
 
     </div>
   );
