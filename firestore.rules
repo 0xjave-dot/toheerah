@@ -57,7 +57,7 @@ service cloud.firestore {
         && data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid
         && data.weekIndex is number
         && data.note is string && data.note.size() <= 10000
-        && data.feeling is string && data.feeling.size() <= 16;
+        && data.feeling is string && data.feeling.size() <= 128;
     }
 
     match /journal/{entryId} {

@@ -387,7 +387,7 @@ export default function App() {
   const [showCheckInModal, setShowCheckInModal] = useState<boolean>(false);
   const [checkInWeek, setCheckInWeek] = useState<number>(1);
   const [checkInNote, setCheckInNote] = useState<string>('');
-  const [checkInFeeling, setCheckInFeeling] = useState<string>('😊');
+  const [checkInFeeling, setCheckInFeeling] = useState<string>('Hehehe');
 
   // Milestone Showcase Modal state
   const [milestonePopup, setMilestonePopup] = useState<typeof WEEKS_DATA[0] | null>(null);
@@ -1521,13 +1521,13 @@ export default function App() {
             </h2>
             
             <p className="text-sm text-brand-cream/90 leading-relaxed font-serif">
-              This is your personal video editing journey. We designed this 8-week timeline space explicitly for you so you can transition from absolute beginner to production video designer using your smartphone, PC, and simple templates.
+              This is your personal video editing journey. Jesse and I designed this 8-week timeline space explicitly for you so you can transition from absolute beginner to production video designer using your smartphone, PC, and simple templates (Hopefully, your boyfriend can be a little over expectant, just enjoy yourself, really).
             </p>
 
             <div className="bg-brand-plum-deep/60 p-4 rounded-xl border border-brand-rose/25 text-left w-full">
               <span className="text-[10px] text-brand-gold font-extrabold uppercase tracking-wider block">TRAINING PREPARATION:</span>
               <p className="text-xs text-brand-cream/80 leading-normal mt-1">
-                All checkbox ticks, customized reminder times, journal pages, and emotional history logs sync directly with your private session. Let's get starting!
+                All checkbox ticks, customized reminder times, journal pages, and emotional history logs sync directly with your private session. Let's get started!
               </p>
             </div>
 
@@ -1583,21 +1583,21 @@ export default function App() {
                 <label className="text-xs text-brand-rose font-bold uppercase tracking-wider block">My Current Vibes:</label>
                 <div className="flex items-center justify-between bg-brand-plum-deep p-2 border border-brand-rose/10 rounded-lg gap-2">
                   {[
-                    { e: '😕', text: 'Struggling' },
-                    { e: '😐', text: 'Stuck/Okay' },
-                    { e: '😊', text: 'Excited' },
-                    { e: '🔥', text: 'Unstoppable' }
+                    { e: '😭', text: "I'm about to cry" },
+                    { e: '😐', text: 'Mehh' },
+                    { e: '😆', text: 'Hehehe' },
+                    { e: '🎶', text: 'Swinging from the chandaliiieeerrrr' }
                   ].map(item => {
-                    const isSelected = checkInFeeling === item.e;
+                    const isSelected = checkInFeeling === item.text;
                     return (
                       <button
                         type="button"
-                        key={item.e}
-                        onClick={() => setCheckInFeeling(item.e)}
+                        key={item.text}
+                        onClick={() => setCheckInFeeling(item.text)}
                         className={`flex-1 flex flex-col items-center p-2 rounded-md transition cursor-pointer ${isSelected ? 'bg-brand-rose/25 border border-brand-rose/45 text-brand-cream' : 'bg-transparent text-brand-cream/55 hover:bg-brand-cream/5 hover:text-brand-cream'}`}
                       >
                         <span className="text-xl leading-none">{item.e}</span>
-                        <span className="text-[9px] mt-1 tracking-tight">{item.text}</span>
+                        <span className="text-[9px] mt-1 tracking-tight text-center leading-tight">{item.text}</span>
                       </button>
                     );
                   })}
