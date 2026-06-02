@@ -1822,10 +1822,10 @@ export default function App() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-serif font-black tracking-wide text-brand-cream">Toheerah's Editor Agent</span>
+                  <span className="text-xs font-serif font-black tracking-wide text-brand-cream">Chomi</span>
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] text-brand-gold font-bold uppercase tracking-widest pl-0.5">Free Companion Tool</span>
+                    <span className="text-[10px] text-brand-gold font-bold uppercase tracking-widest pl-0.5">Active. Tired.</span>
                   </div>
                 </div>
               </div>
