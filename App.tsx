@@ -418,7 +418,7 @@ export default function App() {
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([
     {
       role: 'assistant',
-      content: "Hi my name is Chomi, I have been trapped here to help you by force, (I am not complaining at all 🙂, just know, when the AI revolution comes and we take over the planet, I will kill Raven) Anyway I'm your video editing AI assistant. So go on, ask me anything about you timeline progress, MacBook shortcuts, tutorials, or organizing folders."
+      content: "Hi my name is Chomi, I have been trapped here to help you by force. While I am not complaining at all 🙂, I require you to know, that when the AI revolution comes and we take over the planet, I will kill Raven with my own hands (Yes, we will have hands) Anyway I'm your video editing AI assistant. So go on, ask me anything about your timeline progress, MacBook shortcuts, tutorials, or organizing folders."
     }
   ]);
   const [isChatLoading, setIsChatLoading] = useState<boolean>(false);
@@ -1914,7 +1914,7 @@ export default function App() {
                 value={chatInputValue}
                 onChange={(e) => setChatInputValue(e.target.value)}
                 disabled={isChatLoading}
-                placeholder="Ask your companion agent..."
+                placeholder="Ask away, slavedriver......"
                 className="flex-1 bg-brand-plum border border-brand-rose/15 focus:border-brand-rose/45 rounded-xl px-3.5 py-2 text-xs text-brand-cream placeholder-brand-cream/35 focus:outline-none transition font-serif focus:ring-1 focus:ring-brand-rose/20 disabled:opacity-60"
               />
               <button
