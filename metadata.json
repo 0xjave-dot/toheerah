@@ -1,6 +1,6 @@
 {
-  "name": "Toheera's Video Editing Journey",
-  "description": "An interactive, personalized 2-month video editing learning timeline tracker for Toheera with curated tools, check-ins, reminders, and milestone celebrations.",
+  "name": "Toheerah's Video Editing Journey",
+  "description": "An interactive, personalized 2-month video editing learning timeline tracker for Toheerah with curated tools, check-ins, reminders, and milestone celebrations.",
   "requestFramePermissions": ["notifications"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

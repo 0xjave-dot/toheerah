@@ -27,7 +27,7 @@
     },
     "JournalEntry": {
       "title": "JournalEntry",
-      "description": "Notes documented by Toheera along the editing journey",
+      "description": "Notes documented by Toheerah along the editing journey",
       "type": "object",
       "properties": {
         "id": { "type": "string" },

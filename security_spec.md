@@ -1,4 +1,4 @@
-# Security Specification: Toheera's Video Editing Journey
+# Security Specification: Toheerah's Video Editing Journey
 
 ## 1. Data Invariants
 * **User Profile**: A user node can only describe the authenticated client UID. Field keys must stay immutable except for explicit visual preferences and setup states.
@@ -7,7 +7,7 @@
 
 ## 2. The "Dirty Dozen" Payloads (Abridged Red Team Vectors)
 1. **The Ghost Field Attack**: Creating a user record with an unmapped field `isAdmin: true`. Rejected.
-2. **The Identity Spoofing Attack**: Posting progress for user `Toheera` but with auth context of another UID. Rejected.
+2. **The Identity Spoofing Attack**: Posting progress for user `Toheerah` but with auth context of another UID. Rejected.
 3. **The ID Poisoning Attack**: Submitting journal posts with a 10MB document key instead of alphanumeric strings. Rejected.
 4. **The Time Hijack**: Forging `createdAt` or `updatedAt` to historical epochs rather than using `request.time`. Rejected.
 5. **The Cross-Read Intrusion**: Querying another user's progress index under a generic list. Rejected.
