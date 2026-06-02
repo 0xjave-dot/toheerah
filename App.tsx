@@ -68,7 +68,9 @@ async function testConnection() {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Firebase clients appear to be offline:", error);
+      console.warn("Please check your Firebase configuration. Firebase clients appear to be offline:", error.message);
+    } else {
+      console.info("Connection test status: ", error);
     }
   }
 }
@@ -97,8 +99,16 @@ interface FirestoreErrorInfo {
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errMessage = error instanceof Error ? error.message : String(error);
+  
+  // Gracefully handle common host or client offline errors in dev/sandboxed environments without throwing hard exceptions
+  if (errMessage.includes('the client is offline') || errMessage.includes('offline')) {
+    console.warn(`Firestore Offline Log [${operationType}]: ${path} - ${errMessage}`);
+    return;
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -1583,10 +1593,10 @@ export default function App() {
                 <label className="text-xs text-brand-rose font-bold uppercase tracking-wider block">My Current Vibes:</label>
                 <div className="flex items-center justify-between bg-brand-plum-deep p-2 border border-brand-rose/10 rounded-lg gap-2">
                   {[
-                    { e: '😭', text: "I'm about to cry" },
+                    { e: '🥲', text: "I'm about to cry" },
                     { e: '😐', text: 'Mehh' },
-                    { e: '😆', text: 'Hehehe' },
-                    { e: '🎶', text: 'Swinging from the chandaliiieeerrrr' }
+                    { e: '😌', text: 'Hehehe' },
+                    { e: '🔥', text: 'Swinging from the chandaliiieeerrrr' }
                   ].map(item => {
                     const isSelected = checkInFeeling === item.text;
                     return (
