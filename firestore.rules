@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Pillar 1/Global catching)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Standard Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // User Schema Validation Function (Pillar 2 - Standalone validations)
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() <= 128 && data.uid == request.auth.uid
+        && (data.hasVisited == null || data.hasVisited is bool)
+        && (data.remindersEnabled == null || data.remindersEnabled is bool)
+        && (data.reminderTime == null || data.reminderTime is string)
+        && (data.reminderDays == null || data.reminderDays is list);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidUser(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hasVisited', 'reminderDays', 'reminderTime', 'remindersEnabled', 'createdAt']);
+      allow delete: if false;
+    }
+
+    // Progress Schema Validation Function
+    function isValidProgress(data) {
+      return data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid
+        && data.checkedTasks is map;
+    }
+
+    match /progress/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidProgress(request.resource.data);
+      allow update: if isOwner(userId) && isValidId(userId) && isValidProgress(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedTasks', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    // Journal Entry Validation Function
+    function isValidJournalEntry(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid
+        && data.weekIndex is number
+        && data.note is string && data.note.size() <= 10000
+        && data.feeling is string && data.feeling.size() <= 16;
+    }
+
+    match /journal/{entryId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(entryId) && isValidJournalEntry(request.resource.data);
+      allow update: if isSignedIn() && isOwner(resource.data.userId) && isValidId(entryId) && isValidJournalEntry(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['note', 'feeling']);
+      allow delete: if isSignedIn() && isOwner(resource.data.userId) && isValidId(entryId);
+    }
+  }
+}

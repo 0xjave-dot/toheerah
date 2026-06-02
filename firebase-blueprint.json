@@ -1,0 +1,57 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with setup progress and preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The firebase auth user ID" },
+        "hasVisited": { "type": "boolean", "description": "Whether user completed welcome flow" },
+        "reminderDays": { "type": "array", "description": "Active days for sessions" },
+        "reminderTime": { "type": "string", "description": "Selected reminder time" },
+        "remindersEnabled": { "type": "boolean", "description": "Check if reminders permission granted" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid"]
+    },
+    "Progress": {
+      "title": "Progress",
+      "description": "Dictionary tracking checkboxes of tasks and weeks completed",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The user ID associated with progress" },
+        "checkedTasks": { "type": "object", "description": "Task ID boolean keys" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "checkedTasks"]
+    },
+    "JournalEntry": {
+      "title": "JournalEntry",
+      "description": "Notes documented by Toheera along the editing journey",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "weekIndex": { "type": "number" },
+        "note": { "type": "string" },
+        "feeling": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "weekIndex", "note", "feeling", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Users settings and parameters"
+    },
+    "progress/{userId}": {
+      "schema": "Progress",
+      "description": "Task check status mapped O(1) per user"
+    },
+    "journal/{entryId}": {
+      "schema": "JournalEntry",
+      "description": "Collection of learning logs"
+    }
+  }
+}

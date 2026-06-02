@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-serif: "Plus Jakarta Sans", system-ui, sans-serif; /* Fallback for older serif references */
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --color-brand-bg: #FAF7F2;
+  --color-brand-wine-dark: #35050C;
+  --color-brand-wine: #5C1322;
+  --color-brand-wine-light: #7E1C31;
+  --color-brand-blue: #0055FF;
+  --color-brand-blue-light: #4480FF;
+  --color-brand-nude-dark: #E6DCD0;
+  --color-brand-nude: #F2EAE0;
+  --color-brand-nude-light: #FFFDFB;
+  
+  /* Retain naming bridges for App.tsx elements to prevent compiler errors */
+  --color-brand-plum-light: #F2EAE0;
+  --color-brand-plum: #FFFDFB;
+  --color-brand-plum-deep: #FAF7F2;
+  --color-brand-rose: #5C1322;
+  --color-brand-gold: #0055FF;
+  --color-brand-cream: #35050C;
+}
+
+@layer base {
+  body {
+    background-color: #FAF7F2;
+    color: #35050C;
+    font-family: "Inter", sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Custom Elegant Scrollbar for the newly refined Nude & Burgundy system */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #FAF7F2;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #E6DCD0;
+    border-radius: 4px;
+    border: 2px solid #FAF7F2;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #5C1322;
+  }
+}
+
+/* Custom Keyframe Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes float-reversed {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.12;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.22;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes success-pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Helper utilities */
+.animate-float-slow {
+  animation: float 7s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-reversed 5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.animate-success-pop {
+  animation: success-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Upgraded Glassmorphism Cards to match Nude & White styling */
+.plum-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(92, 19, 34, 0.12);
+  box-shadow: 0 4px 20px -2px rgba(92, 19, 34, 0.04), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.plum-glass:hover {
+  border-color: rgba(0, 85, 255, 0.3);
+  box-shadow: 0 12px 30px -4px rgba(92, 19, 34, 0.07), 0 4px 12px -2px rgba(0, 85, 255, 0.04);
+}
+
+/* Dynamic accent features */
+.gold-glow {
+  text-shadow: 0 0 12px rgba(0, 85, 255, 0.15);
+}
+
+.card-gold-glow {
+  box-shadow: 0 10px 30px -10px rgba(92, 19, 34, 0.08);
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg) translateX(0px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(105vh) rotate(540deg) translateX(80px);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti-fall 3.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
