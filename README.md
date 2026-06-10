@@ -16,5 +16,11 @@ View your app in AI Studio: https://ai.studio/apps/02ab2c86-090c-48cf-85ae-54c9a
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+3. Configure SMTP settings in [.env.local](.env.local) if you want email reminders:
+   - `SMTP_HOST`
+   - `SMTP_PORT`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `EMAIL_FROM`
+4. Run the app:
    `npm run dev`

@@ -3,8 +3,22 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 dotenv.config({ path: ".env.local" });
+
+const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
+const smtpTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    })
+  : null;
 
 async function startServer() {
   const app = express();
@@ -103,6 +117,31 @@ Be encouraging, helpful, supportive, and highly clear. Assist her with macOS Sho
       }
       
       res.status(500).json({ error: error.message || "Internal server error" });
+    }
+  });
+
+  app.post('/api/send-reminder-email', async (req, res) => {
+    try {
+      if (!smtpTransporter) {
+        return res.status(500).json({ error: "SMTP mailer not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in .env.local." });
+      }
+
+      const { to, subject, text } = req.body;
+      if (!to || !subject || !text) {
+        return res.status(400).json({ error: "Missing required email fields: to, subject, text." });
+      }
+
+      await smtpTransporter.sendMail({
+        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+        to,
+        subject,
+        text
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Reminder email send failed:', error);
+      res.status(500).json({ error: error?.message || 'Failed to send reminder email.' });
     }
   });
 

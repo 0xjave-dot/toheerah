@@ -130,6 +130,7 @@ interface UserProfile {
   reminderDays: string[];
   reminderTime: string;
   remindersEnabled: boolean;
+  reminderChannel: 'browser' | 'email';
   createdAt: string;
 }
 
@@ -408,6 +409,8 @@ export default function App() {
   const [reminderDays, setReminderDays] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [reminderTime, setReminderTime] = useState<string>('18:00');
   const [remindersEnabled, setRemindersEnabled] = useState<boolean>(false);
+  const [reminderChannel, setReminderChannel] = useState<'browser' | 'email'>('browser');
+  const [emailSendStatus, setEmailSendStatus] = useState<string | null>(null);
   
   // Toast presentation helpers
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -526,6 +529,7 @@ export default function App() {
         setReminderDays(userData.reminderDays ?? ['Mon', 'Wed', 'Fri']);
         setReminderTime(userData.reminderTime ?? '18:00');
         setRemindersEnabled(userData.remindersEnabled ?? false);
+        setReminderChannel(userData.reminderChannel ?? 'browser');
       } else {
         // New user - default set
         const newUserProfile: UserProfile = {
@@ -534,6 +538,7 @@ export default function App() {
           reminderDays: ['Mon', 'Wed', 'Fri'],
           reminderTime: '18:00',
           remindersEnabled: false,
+          reminderChannel: 'browser',
           createdAt: new Date().toISOString()
         };
         await setDoc(userDocRef, newUserProfile);
@@ -592,6 +597,7 @@ export default function App() {
     const localReminderDays = JSON.parse(localStorage.getItem('reminderDays') || '["Mon", "Wed", "Fri"]');
     const localReminderTime = localStorage.getItem('reminderTime') || '18:00';
     const localRemindersEnabled = localStorage.getItem('remindersEnabled') === 'true';
+    const localReminderChannel = (localStorage.getItem('reminderChannel') || 'browser') as 'browser' | 'email';
 
     setHasVisited(localHasVisited);
     setCheckedTasks(localChecked);
@@ -599,6 +605,7 @@ export default function App() {
     setReminderDays(localReminderDays);
     setReminderTime(localReminderTime);
     setRemindersEnabled(localRemindersEnabled);
+    setReminderChannel(localReminderChannel);
   };
 
   // Synchronizers to sync local + clouds in parallel
@@ -634,20 +641,28 @@ export default function App() {
     }
   };
 
-  const syncReminderConfig = async (days: string[], time: string, enabled: boolean) => {
+  const syncReminderConfig = async (
+    days: string[],
+    time: string,
+    enabled: boolean,
+    channel: 'browser' | 'email' = reminderChannel
+  ) => {
     setReminderDays(days);
     setReminderTime(time);
     setRemindersEnabled(enabled);
+    setReminderChannel(channel);
     localStorage.setItem('reminderDays', JSON.stringify(days));
     localStorage.setItem('reminderTime', time);
     localStorage.setItem('remindersEnabled', String(enabled));
+    localStorage.setItem('reminderChannel', channel);
 
     if (user && user.uid !== 'guest_user') {
       try {
         await updateDoc(doc(db, 'users', user.uid), {
           reminderDays: days,
           reminderTime: time,
-          remindersEnabled: enabled
+          remindersEnabled: enabled,
+          reminderChannel: channel
         });
       } catch (err) {
         console.warn("Could not sync reminders config to cloud Firestore:", err);
@@ -794,27 +809,107 @@ export default function App() {
   // Browser Notification integration request
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
-      showToast("Browser does not support notifications.");
+      showToast("Browser does not support notifications. Email reminders are still available.");
+      setReminderChannel('email');
+      syncReminderConfig(reminderDays, reminderTime, remindersEnabled, 'email');
       return;
     }
     try {
       const status = await Notification.requestPermission();
       if (status === 'granted') {
-        syncReminderConfig(reminderDays, reminderTime, true);
+        syncReminderConfig(reminderDays, reminderTime, true, 'browser');
         new Notification("Setup Complete Toheerah! 👋", {
           body: "Your daily video editing sessions are scheduled successfully!",
           icon: "/favicon.ico"
         });
         showToast("Reminders ON ✓ Permission Granted.");
       } else {
-        syncReminderConfig(reminderDays, reminderTime, false);
+        syncReminderConfig(reminderDays, reminderTime, false, reminderChannel);
         showToast("Notifications turned off.");
       }
     } catch (err) {
       console.warn("Permission state checking failed:", err);
       // In sandbox iFrames, browser standard Notification can fail, backup with visual simulation status safely
-      syncReminderConfig(reminderDays, reminderTime, !remindersEnabled);
+      syncReminderConfig(reminderDays, reminderTime, !remindersEnabled, reminderChannel);
       showToast(remindersEnabled ? "Reminders toggled OFF" : "Reminders Simulated ON! ✓");
+    }
+  };
+
+  const generateReminderEmailContent = (days: string[], time: string) => {
+    const subjectChoices = [
+      `Time to edit! Your ${days.length > 1 ? 'next sessions' : 'next session'} are ready 🎬`,
+      `Your creative editing break is booked for ${time} ✨`,
+      `Hey star editor — ${time} is your next video moment!`,
+      `Let’s make magic with your clips at ${time} 🎥`
+    ];
+
+    const intros = [
+      "Ready to sprinkle some cinematic sparkle on your edits?",
+      "Your video studio called — it says it's time to play with footage.",
+      "Grab your favorite snack, because your edit session is about to begin.",
+      "The timeline is waiting and so is your next great cut."
+    ];
+
+    const actionLines = [
+      "Pick one clip and try a quick slice or motion flourish.",
+      "Add a snappy transition, a caption line, or a fun sound punch.",
+      "Make one edit that makes your story feel more alive.",
+      "Try a bold jump cut, a sweet title drop, or a quick color tweak."
+    ];
+
+    const closings = [
+      "See you on the timeline!",
+      "Catch you in the edit suite, boss.",
+      "Your editing sidekick is cheering you on.",
+      "Go make something you’re proud of."
+    ];
+
+    const dayLabel = days.length > 1 ? `on ${days.join(', ')}` : `this ${days[0]}`;
+    const intro = intros[Math.floor(Math.random() * intros.length)];
+    const action = actionLines[Math.floor(Math.random() * actionLines.length)];
+    const closing = closings[Math.floor(Math.random() * closings.length)];
+    const subject = subjectChoices[Math.floor(Math.random() * subjectChoices.length)];
+
+    return {
+      subject,
+      text: `Hey Toheerah,\n\n${intro} Your next editing session is set ${dayLabel} at ${time}.\n\n${action}\n\nIf you want, I can also drop a quick MacBook shortcut tip for your workflow.\n\n${closing}\n\n— Your friendly video coach`,
+    };
+  };
+
+  const sendReminderEmail = async () => {
+    const recipient = user?.email;
+    if (!recipient) {
+      showToast("Sign in with Google to use email delivery.");
+      return;
+    }
+
+    const emailContent = generateReminderEmailContent(reminderDays, reminderTime);
+
+    try {
+      const response = await fetch('/api/send-reminder-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          to: recipient,
+          subject: emailContent.subject,
+          text: emailContent.text
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || `Email send failed with status ${response.status}`;
+        throw new Error(errorMessage);
+      }
+
+      showToast(`Reminder email sent to ${recipient}!`);
+      setEmailSendStatus(`Email sent to ${recipient}`);
+    } catch (err: any) {
+      console.error("Email delivery failed:", err);
+      const message = err?.message || "Unable to send the reminder email.";
+      showToast(message.includes('SMTP mailer not configured') ? "Email service not configured. Please set up SMTP." : message);
     }
   };
 
@@ -1084,6 +1179,29 @@ export default function App() {
                     className="bg-brand-plum-deep border border-brand-rose/20 rounded-md py-1 px-2 text-xs text-brand-gold font-bold focus:outline-none focus:ring-1 focus:ring-brand-gold text-center w-24"
                   />
                 </div>
+
+                <div className="mt-4">
+                  <span className="text-[10px] uppercase font-black tracking-widest text-brand-cream leading-none">Delivery Method</span>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => syncReminderConfig(reminderDays, reminderTime, remindersEnabled, 'browser')}
+                      className={`text-[11px] font-bold py-2 rounded-lg transition ${reminderChannel === 'browser' ? 'bg-emerald-500 text-black' : 'bg-brand-plum-deep text-brand-cream border border-brand-rose/10'}`}
+                    >
+                      Browser
+                    </button>
+                    <button
+                      onClick={() => syncReminderConfig(reminderDays, reminderTime, remindersEnabled, 'email')}
+                      className={`text-[11px] font-bold py-2 rounded-lg transition ${reminderChannel === 'email' ? 'bg-emerald-500 text-black' : 'bg-brand-plum-deep text-brand-cream border border-brand-rose/10'}`}
+                    >
+                      Email
+                    </button>
+                  </div>
+                  {reminderChannel === 'email' && (
+                    <p className="text-[11px] text-brand-cream/70 mt-2">
+                      Reminder emails will be sent to <span className="text-brand-gold">{user?.email ?? 'your Google email'}</span>.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1093,6 +1211,17 @@ export default function App() {
             >
               <span>{remindersEnabled ? "Update Reminder Settings" : "Enable Reminders Setup"}</span>
             </button>
+            {reminderChannel === 'email' && (
+              <button
+                onClick={sendReminderEmail}
+                className="w-full text-center py-1.5 bg-brand-gold/20 hover:bg-brand-gold/30 text-brand-gold border border-brand-gold/30 text-xs font-bold rounded-lg transition mt-2"
+              >
+                Send Reminder Email Now
+              </button>
+            )}
+            {emailSendStatus && (
+              <p className="text-[11px] text-emerald-300 mt-2">{emailSendStatus}</p>
+            )}
           </div>
         </section>
 
