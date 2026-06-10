@@ -44,6 +44,7 @@ async function startServer() {
 
       const ai = new GoogleGenAI({
         apiKey: geminiApiKey,
+        httpOptions: {
           headers: {
             'User-Agent': 'aistudio-build',
           }
