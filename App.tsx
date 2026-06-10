@@ -455,19 +455,28 @@ export default function App() {
         body: JSON.stringify({ messages: updatedHistory }),
       });
 
+      const responseText = await response.text();
+      let responseData: any = null;
+      if (responseText) {
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (parseError) {
+          const errorMsg = `Invalid server response: ${responseText}`;
+          throw new Error(errorMsg);
+        }
+      }
+
       if (!response.ok) {
         let errorMsg = `Server returned status code: ${response.status}`;
-        try {
-          const errData = await response.json();
-          if (errData && errData.error) {
-            errorMsg = errData.error;
-          }
-        } catch (_) {}
+        if (responseData && responseData.error) {
+          errorMsg = responseData.error;
+        } else if (responseText) {
+          errorMsg = responseText;
+        }
         throw new Error(errorMsg);
       }
 
-      const data = await response.json();
-      setChatHistory(prev => [...prev, { role: 'assistant', content: data.text || "I was unable to formulate a response. Just enjoy yourself and try again!" }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: responseData?.text || "I was unable to formulate a response. Just enjoy yourself and try again!" }]);
     } catch (error: any) {
       console.error("Agent chat error:", error);
       const friendlyError = error?.message || "Oops, I encountered a connection issue. Please check that the dev server is active or try again later!";
