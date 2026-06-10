@@ -29,21 +29,11 @@ async function startServer() {
   // API Route for the AI agent
   app.post("/api/chat", async (req, res) => {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        return res.status(400).json({ 
-          error: "GEMINI_API_KEY is missing. Please configure it in **Settings > Secrets** in your AI Studio dashboard!" 
-        });
-      }
+      const geminiApiKey = process.env.GEMINI_API_KEY?.trim().replace(/^['\"]|['\"]$/g, '');
 
-      // Pre-validate a few typical invalid key representations
-      const trimmedKey = apiKey.trim().replace(/^['"]|['"]$/g, '');
-      if (
-        trimmedKey === "MY_GEMINI_API_KEY" || 
-        trimmedKey.length < 15
-      ) {
-        return res.status(400).json({
-          error: "The configured Gemini API key appears to be a placeholder or invalid. Please ensure you supply a valid Gemini API Key under **Settings > Secrets** in your AI Studio dashboard to talk with Bot!"
+      if (!geminiApiKey || geminiApiKey === "MY_GEMINI_API_KEY" || geminiApiKey.length < 15) {
+        return res.status(500).json({
+          error: "Gemini API key is not configured. Set GEMINI_API_KEY in .env.local or in your runtime environment."
         });
       }
 
@@ -53,7 +43,7 @@ async function startServer() {
       }
 
       const ai = new GoogleGenAI({
-        apiKey: trimmedKey,
+        apiKey: geminiApiKey,
         httpOptions: {
           headers: {
             'User-Agent': 'aistudio-build',

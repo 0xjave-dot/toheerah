@@ -476,7 +476,7 @@ export default function App() {
         throw new Error(errorMsg);
       }
 
-      setChatHistory(prev => [...prev, { role: 'assistant', content: responseData?.text || "I was unable to formulate a response. Just enjoy yourself and try again!" }]);
+      setChatHistory(prev => [...prev, { role: 'assistant', content: responseData?.text || "AI reply\nI was unable to formulate a response. Just enjoy yourself and try again!\nBot 1.0" }]);
     } catch (error: any) {
       console.error("Agent chat error:", error);
       const friendlyError = error?.message || "Oops, I encountered a connection issue. Please check that the dev server is active or try again later!";

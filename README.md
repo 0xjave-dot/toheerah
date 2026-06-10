@@ -15,7 +15,7 @@ View your app in AI Studio: https://ai.studio/apps/02ab2c86-090c-48cf-85ae-54c9a
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. The Gemini API key is now hardcoded in `server.ts` so no secret setup is required for AI chat.
 3. Configure SMTP settings in [.env.local](.env.local) if you want email reminders:
    - `SMTP_HOST`
    - `SMTP_PORT`
